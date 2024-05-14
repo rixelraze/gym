@@ -1230,10 +1230,10 @@ public class dashboardController implements Initializable {
 
             if (option.get().equals(ButtonType.OK)) {
 
-                // TO HIDE YOUR DASHBOARD FORM
+            
                 logout.getScene().getWindow().hide();
 
-                // LINK YOUR LOGIN FORM
+            
                 Parent root = FXMLLoader.load(getClass().getResource("FXMLDocument.fxml"));
 
                 Stage stage = new Stage();
