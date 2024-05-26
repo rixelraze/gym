@@ -77,158 +77,156 @@ public class FXMLDocumentController implements Initializable {
     private FontAwesomeIcon close_icon;
 
 
-    private Connection connect;
-    private PreparedStatement prepare;
-    private ResultSet result;
+ // Поля для работы с базой данных
+private Connection connect; // Подключение к базе данных
+private PreparedStatement prepare; // Подготовленный SQL запрос
+private ResultSet result; // Результат выполнения запроса
 
-    public void login() {
+// Метод для выполнения входа в систему
+public void login() {
+    // SQL запрос для проверки учетных данных
+    String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
 
-        String sql = "SELECT * FROM admin WHERE username = ? and password = ?";
+    connect = database.connectDb(); // Подключение к базе данных
 
-        connect = database.connectDb();
+    try {
+        prepare = connect.prepareStatement(sql); // Подготовка SQL запроса
+        prepare.setString(1, si_username.getText()); // Установка имени пользователя
+        prepare.setString(2, si_password.getText()); // Установка пароля
+        result = prepare.executeQuery(); // Выполнение запроса
 
-        try {
-            prepare = connect.prepareStatement(sql);
-            prepare.setString(1, si_username.getText());
-            prepare.setString(2, si_password.getText());
-            result = prepare.executeQuery();
+        Alert alert;
 
-            Alert alert;
+        // Проверка, заполнены ли поля
+        if (si_username.getText().isEmpty() || si_password.getText().isEmpty()) {
+            alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Пожалуйста, заполните все пустые поля");
+            alert.showAndWait();
+        } else {
+            // Проверка правильности учетных данных
+            if (result.next()) {
+                data.username = si_username.getText(); // Сохранение имени пользователя
 
-            if (si_username.getText().isEmpty() || si_password.getText().isEmpty()) {
+                alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Information Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Успешно!");
+                alert.showAndWait();
+
+                si_loginBtn.getScene().getWindow().hide(); // Скрытие текущего окна
+
+                // Загрузка и отображение новой сцены (dashboard)
+                Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("dashboard.fxml")));
+                Stage stage = new Stage();
+                Scene scene = new Scene(root);
+                stage.initStyle(StageStyle.TRANSPARENT); // Установка прозрачного стиля
+                stage.setScene(scene);
+                stage.show();
+            } else {
+                // Уведомление об ошибке, если учетные данные неверны
                 alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
-                alert.setContentText("Пожалуйста, заполните все пустые поля");
+                alert.setContentText("Неверное имя пользователя/пароль");
                 alert.showAndWait();
-            } else {
-                if (result.next()) {
-
-                    data.username = si_username.getText();
-
-                    alert = new Alert(AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Успешно!");
-                    alert.showAndWait();
-
-                    si_loginBtn.getScene().getWindow().hide();
-
-                    Parent root = FXMLLoader.load(Objects.requireNonNull(getClass().getResource("dashboard.fxml")));
-
-                    Stage stage = new Stage();
-                    Scene scene = new Scene(root);
-
-                    stage.initStyle(StageStyle.TRANSPARENT);
-
-                    stage.setScene(scene);
-                    stage.show();
-
-                } else {
-                    alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Неверное имя пользователя/пароль");
-                    alert.showAndWait();
-                }
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
+    } catch (Exception e) {
+        e.printStackTrace(); // Обработка исключений
     }
+}
 
-    public void signup() {
+// Метод для регистрации нового пользователя
+public void signup() {
+    // SQL запрос для добавления нового пользователя
+    String sql = "INSERT INTO admin (email, username, password) VALUES(?,?,?)";
 
-        String sql = "INSERT INTO admin (email, username, password) VALUES(?,?,?)";
+    connect = database.connectDb(); // Подключение к базе данных
 
-        connect = database.connectDb();
+    try {
+        Alert alert;
 
-        try {
-            Alert alert;
-
-            if (su_email.getText().isEmpty() || su_username.getText().isEmpty()
-                    || su_password.getText().isEmpty()) {
+        // Проверка, заполнены ли поля
+        if (su_email.getText().isEmpty() || su_username.getText().isEmpty() || su_password.getText().isEmpty()) {
+            alert = new Alert(AlertType.ERROR);
+            alert.setTitle("Error Message");
+            alert.setHeaderText(null);
+            alert.setContentText("Пожалуйста, заполните все пустые поля");
+            alert.showAndWait();
+        } else {
+            // Проверка длины пароля
+            if (su_password.getText().length() < 5) {
                 alert = new Alert(AlertType.ERROR);
                 alert.setTitle("Error Message");
                 alert.setHeaderText(null);
-                alert.setContentText("Пожалуйста, заполните все пустые поля");
+                alert.setContentText("Пароль должен содержать не менее 6 символов!");
                 alert.showAndWait();
             } else {
-                if (su_password.getText().length() < 5) {
-                    alert = new Alert(AlertType.ERROR);
-                    alert.setTitle("Error Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Пароль должен содержать не менее 6 символов!");
-                    alert.showAndWait();
-                } else {
-                    prepare = connect.prepareStatement(sql);
-                    prepare.setString(1, su_email.getText());
-                    prepare.setString(2, su_username.getText());
-                    prepare.setString(3, su_password.getText());
+                // Выполнение SQL запроса для регистрации
+                prepare = connect.prepareStatement(sql);
+                prepare.setString(1, su_email.getText());
+                prepare.setString(2, su_username.getText());
+                prepare.setString(3, su_password.getText());
 
-                    alert = new Alert(AlertType.INFORMATION);
-                    alert.setTitle("Information Message");
-                    alert.setHeaderText(null);
-                    alert.setContentText("Успешно!");
-                    alert.showAndWait();
+                alert = new Alert(AlertType.INFORMATION);
+                alert.setTitle("Information Message");
+                alert.setHeaderText(null);
+                alert.setContentText("Успешно!");
+                alert.showAndWait();
 
-                    prepare.executeUpdate();
+                prepare.executeUpdate(); // Выполнение запроса на добавление пользователя
 
-                    su_email.setText("");
-                    su_username.setText("");
-                    su_password.setText("");
-                }
+                su_email.setText(""); // Очистка полей
+                su_username.setText("");
+                su_password.setText("");
             }
-
-        } catch (Exception e) {
-            e.printStackTrace();
         }
-
+    } catch (Exception e) {
+        e.printStackTrace(); // Обработка исключений
     }
+}
 
-    public void signupSlider() {
+// Метод для анимации перехода к форме регистрации
+public void signupSlider() {
+    TranslateTransition slider1 = new TranslateTransition(); // Создание объекта для анимации
+    slider1.setNode(sub_form); // Установка узла для анимации
+    slider1.setToX(300); // Установка конечной позиции по оси X
+    slider1.setDuration(Duration.seconds(.5)); // Установка длительности анимации
+    slider1.play(); // Запуск анимации
 
-        TranslateTransition slider1 = new TranslateTransition();
-        slider1.setNode(sub_form);
-        slider1.setToX(300);
-        slider1.setDuration(Duration.seconds(.5));
-        slider1.play();
+    slider1.setOnFinished((ActionEvent event) -> {
+        edit_label.setText("Войти в аккаунт"); // Изменение текста метки
 
-        slider1.setOnFinished((ActionEvent event) -> {
-            edit_label.setText("Войти в аккаунт");
+        sub_signupBtn.setVisible(false); // Скрытие кнопки регистрации
+        sub_loginBtn.setVisible(true); // Отображение кнопки входа
 
-            sub_signupBtn.setVisible(false);
-            sub_loginBtn.setVisible(true);
+        close_icon.setFill(Color.valueOf("#fff")); // Изменение цвета иконки закрытия
+    });
+}
 
-            close_icon.setFill(Color.valueOf("#fff"));
-        });
+// Метод для анимации перехода к форме входа
+public void loginSlider() {
+    TranslateTransition slider1 = new TranslateTransition(); // Создание объекта для анимации
+    slider1.setNode(sub_form); // Установка узла для анимации
+    slider1.setToX(0); // Установка конечной позиции по оси X
+    slider1.setDuration(Duration.seconds(.5)); // Установка длительности анимации
+    slider1.play(); // Запуск анимации
 
-    }
+    slider1.setOnFinished((ActionEvent event) -> {
+        edit_label.setText("Создайте аккаунт"); // Изменение текста метки
 
-    public void loginSlider() {
+        sub_signupBtn.setVisible(true); // Отображение кнопки регистрации
+        sub_loginBtn.setVisible(false); // Скрытие кнопки входа
+        close_icon.setFill(Color.valueOf("#000")); // Изменение цвета иконки закрытия
+    });
+}
 
-        TranslateTransition slider1 = new TranslateTransition();
-        slider1.setNode(sub_form);
-        slider1.setToX(0);
-        slider1.setDuration(Duration.seconds(.5));
-        slider1.play();
-
-        slider1.setOnFinished((ActionEvent event) -> {
-            edit_label.setText("Создайте аккаунт");
-
-            sub_signupBtn.setVisible(true);
-            sub_loginBtn.setVisible(false);
-            close_icon.setFill(Color.valueOf("#000"));
-        });
-
-    }
-
-    public void close() {
-        javafx.application.Platform.exit();
-    }
-
+// Метод для закрытия приложения
+public void close() {
+    javafx.application.Platform.exit(); // Завершение работы приложения
+}
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         // TODO
